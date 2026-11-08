@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SXM Boot</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg class="backdrop" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <rect width="1440" height="900" fill="#7FB3E6"/>
+  <path d="M0 0 L520 0 L260 380Z" fill="#8CBDEB"/><path d="M520 0 L1100 0 L760 300Z" fill="#76AADF"/>
+  <path d="M1100 0 L1440 0 L1440 420Z" fill="#8FC0EC"/><path d="M0 380 L260 380 L0 900Z" fill="#6FA3DA"/>
+  <path d="M260 380 L760 300 L560 900 L0 900Z" fill="#7AAEE2"/><path d="M760 300 L1440 420 L1440 900 L560 900Z" fill="#6A9FD8"/>
+  <path d="M1100 0 L760 300 L1440 420Z" fill="#83B6E8"/>
+</svg>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="2" width="9" height="6" rx="1"/><path d="M10 4.5h0M14 4.5h0"/><path d="M5.5 8h13v11.5a2.5 2.5 0 0 1-2.5 2.5H8a2.5 2.5 0 0 1-2.5-2.5z"/></svg>
+      </div>
+      <div><strong>SXM Boot</strong><small>v0.1.0</small></div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item on" data-view="home">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/></svg>Accueil</button>
+      <button class="nav-item" data-view="onkey">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>Sur la clé<span class="count" id="onkey-badge" hidden>0</span></button>
+      <button class="nav-item" data-view="about">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v0"/></svg>À propos</button>
+    </nav>
+    <div class="side-art" aria-hidden="true">
+      <svg viewBox="0 0 220 150">
+        <path d="M0 110 C50 80 90 120 140 95 S200 70 220 85 V150 H0z" fill="#DCE9FB"/>
+        <path d="M0 125 C60 105 120 140 220 115 V150 H0z" fill="#C6DBF7"/>
+        <g transform="translate(70 18) rotate(-35 50 50)">
+          <rect x="30" y="0" width="40" height="28" rx="4" fill="#B7C4D6"/>
+          <rect x="40" y="8" width="7" height="7" fill="#5B6B7B"/><rect x="53" y="8" width="7" height="7" fill="#5B6B7B"/>
+          <rect x="18" y="26" width="64" height="88" rx="12" fill="#1F5FD1"/>
+          <text x="50" y="76" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="17" fill="#fff">SXM</text>
+          <text x="50" y="93" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="#CFE0FF">Boot</text>
+        </g>
+      </svg>
+      <p>Une clé, tous tes systèmes.</p>
+    </div>
+  </aside>
+
+  <main>
+    <!-- Accueil -->
+    <section id="view-home" class="view">
+      <div class="hero">
+        <svg class="hero-art" viewBox="0 0 600 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EC9F2"/><stop offset="1" stop-color="#D9F0FB"/></linearGradient>
+            <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26B5C9"/><stop offset="1" stop-color="#0E8FB0"/></linearGradient>
+          </defs>
+          <rect width="600" height="170" fill="url(#sky)"/>
+          <circle cx="520" cy="38" r="16" fill="#FFF3C4"/>
+          <path d="M120 112 L210 40 L250 70 L300 28 L370 82 L420 60 L500 108 Z" fill="#5E9C6A"/>
+          <path d="M160 112 L230 62 L280 90 L330 55 L400 100 L460 84 L540 112 Z" fill="#3F7F55"/>
+          <path d="M300 28 L318 42 L304 40 L292 46 Z" fill="#7DB386"/>
+          <rect y="104" width="600" height="66" fill="url(#sea)"/>
+          <path d="M0 132 C120 124 230 140 340 130 S520 122 600 128" stroke="#7FDDEA" stroke-width="2" fill="none" opacity=".7"/>
+          <path d="M380 112 C430 104 500 106 600 98 V116 C520 118 450 120 380 116Z" fill="#F4E3B5"/>
+          <g fill="#FFFFFF"><rect x="430" y="98" width="8" height="7"/><rect x="444" y="96" width="10" height="9"/><rect x="460" y="99" width="7" height="6"/></g>
+          <g fill="#E8735A"><path d="M429 98 l5-4 5 4z"/><path d="M443 96 l6-5 6 5z"/><path d="M459 99 l4-3 4 3z"/></g>
+          <path d="M70 150 l8 -6 l8 6 z" fill="#fff" opacity=".9"/>
+        </svg>
+        <div class="hero-text">
+          <h1>SXM Boot</h1>
+          <p>Crée facilement une clé USB multiboot<br>avec tes systèmes préférés.</p>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div class="col-main">
+          <div class="sec-head">
+            <h2>Distributions disponibles</h2>
+            <label class="search">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input id="q" placeholder="Rechercher une distribution…" aria-label="Rechercher une distribution">
+            </label>
+          </div>
+          <div class="cards" id="cards"></div>
+        </div>
+
+        <div class="col-side">
+          <div class="box">
+            <div class="box-head">
+              <h3>Clé USB cible</h3>
+              <button class="icon-btn" id="refresh" aria-label="Actualiser les clés">
+                <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+            </div>
+            <select id="drive-sel" aria-label="Clé USB"></select>
+            <div class="drive-meta" id="drive-meta"></div>
+            <div class="space" id="space" hidden>
+              <div class="bar"><div class="bar-used" id="sp-used"></div><div class="bar-add" id="sp-add"></div></div>
+              <div class="legend"><span><i class="sw used"></i>Utilisé <b id="sp-u"></b></span><span><i class="sw add"></i>Sélection <b id="sp-a"></b></span><span><i class="sw free"></i>Libre <b id="sp-f"></b></span></div>
+            </div>
+          </div>
+
+          <div class="box">
+            <h3>Options</h3>
+            <label class="opt"><input type="checkbox" id="opt-sha" checked> Vérifier l'intégrité des ISO (SHA256)</label>
+            <label class="opt"><input type="checkbox" id="opt-eject"> Éjecter la clé à la fin</label>
+            <div class="info">Les ISO déjà présentes sur une clé SXM Boot sont conservées.</div>
+          </div>
+
+          <button class="primary big" id="go" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="6" rx="1"/><path d="M6 8h12v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/></svg>
+            <span id="go-label">Créer / Mettre à jour la clé</span></button>
+          <button class="ghost" id="prep">Préparer une clé vierge (Ventoy)</button>
+        </div>
+      </div>
+
+      <div class="bottom">
+        <div class="box prog">
+          <div class="box-head"><h3>Progression</h3><span class="pct" id="pct">0 %</span></div>
+          <div class="bar thick"><div class="bar-add" id="gbar"></div></div>
+          <small id="gtext">Prêt. Coche des distributions puis clique sur « Créer / Mettre à jour la clé ».</small>
+          <div class="jobs" id="jobs"></div>
+          <div class="prog-actions" id="prog-actions" hidden>
+            <button class="danger" id="cancel">Annuler</button>
+            <button class="ghost" id="eject">Éjecter la clé</button>
+          </div>
+        </div>
+        <div class="box log">
+          <h3>Journal d'activité</h3>
+          <ol id="log"></ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sur la clé -->
+    <section id="view-onkey" class="view" hidden>
+      <div class="page-head"><h1>Sur la clé</h1><p id="onkey-sub">Choisis d'abord une clé sur l'accueil.</p></div>
+      <div class="box"><ul class="onkey" id="onkey"></ul></div>
+    </section>
+
+    <!-- À propos -->
+    <section id="view-about" class="view" hidden>
+      <div class="page-head"><h1>À propos</h1></div>
+      <div class="box about">
+        <h2>SXM Boot 0.1.0</h2>
+        <p>Créateur de clé USB multiboot pour Fedora.</p>
+        <p><strong>© 2026 Laurent Honoré</strong><br>Logiciel libre distribué sous licence GNU GPL v3 ou ultérieure, sans aucune garantie.</p>
+        <p class="muted">Moteur de démarrage : Ventoy (GPLv3), téléchargé depuis son dépôt officiel.<br>Interface : Tauri (MIT / Apache-2.0). Logos : Simple Icons (CC0).<br>Les noms et logos des distributions sont des marques de leurs propriétaires respectifs ; SXM Boot n'est affilié à aucune d'elles.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" role="status" hidden></div>
+<script src="catalog.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

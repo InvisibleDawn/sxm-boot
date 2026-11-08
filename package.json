@@ -1,0 +1,13 @@
+{
+  "name": "sxm-boot",
+  "version": "0.1.0",
+  "description": "Créateur de clé USB multiboot pour Fedora, avec une interface claire en 3 étapes. Le moteur de démarrage est Ventoy, que l'appli télécharge elle-même au premier lancement.",
+  "scripts": {},
+  "keywords": [],
+  "author": "Laurent Honoré",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4"
+  },
+  "private": true
+}
