@@ -16,6 +16,8 @@ use tokio::process::Command;
 
 #[cfg(target_os = "macos")]
 mod macos;
+#[cfg(windows)]
+mod windows;
 
 static CANCEL: AtomicBool = AtomicBool::new(false);
 const CHUNK: usize = 4 * 1024 * 1024;
@@ -59,8 +61,11 @@ fn first_mount(v: &Value) -> Option<String> {
 }
 
 pub(crate) async fn run(cmd: &str, args: &[&str]) -> Result<String, String> {
-    let out = Command::new(cmd)
-        .args(args)
+    let mut c = Command::new(cmd);
+    c.args(args);
+    #[cfg(windows)]
+    c.creation_flags(0x0800_0000); // pas de fenêtre de console
+    let out = c
         .output()
         .await
         .map_err(|e| format!("{cmd} introuvable : {e}"))?;
@@ -75,6 +80,8 @@ pub(crate) async fn run(cmd: &str, args: &[&str]) -> Result<String, String> {
 async fn list_drives() -> Result<Vec<Drive>, String> {
     #[cfg(target_os = "macos")]
     return macos::list_drives().await;
+    #[cfg(windows)]
+    return windows::list_drives().await;
     #[allow(unreachable_code)]
     let json = run(
         "lsblk",
@@ -114,7 +121,7 @@ fn find_ventoy() -> Option<PathBuf> {
     let base = ventoy_dir();
     if let Ok(entries) = std::fs::read_dir(&base) {
         for e in entries.flatten() {
-            let p = e.path().join("Ventoy2Disk.sh");
+            let p = e.path().join(if cfg!(windows) { "Ventoy2Disk.exe" } else { "Ventoy2Disk.sh" });
             if p.exists() {
                 return Some(p);
             }
@@ -141,14 +148,14 @@ async fn fetch_ventoy(app: AppHandle) -> Result<String, String> {
         .send().await.map_err(|e| e.to_string())?
         .json().await.map_err(|e| e.to_string())?;
     let asset = rel["assets"].as_array().and_then(|a| {
-        a.iter().find(|x| x["name"].as_str().map_or(false, |n| n.ends_with("-linux.tar.gz")))
+        a.iter().find(|x| x["name"].as_str().map_or(false, |n| n.ends_with(if cfg!(windows) { "-windows.zip" } else { "-linux.tar.gz" })))
     }).ok_or("Archive Linux de Ventoy introuvable")?;
     let url = asset["browser_download_url"].as_str().ok_or("URL manquante")?;
     let dir = ventoy_dir();
     tokio::fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
-    let tar = dir.join("ventoy.tar.gz");
+    let tar = dir.join(if cfg!(windows) { "ventoy.zip" } else { "ventoy.tar.gz" });
     download_to(&app, "ventoy", url, &tar, None).await?;
-    run("tar", &["-xzf", tar.to_str().unwrap(), "-C", dir.to_str().unwrap()]).await?;
+    run("tar", &[if cfg!(windows) { "-xf" } else { "-xzf" }, tar.to_str().unwrap(), "-C", dir.to_str().unwrap()]).await?;
     let _ = tokio::fs::remove_file(&tar).await;
     find_ventoy().map(|p| p.display().to_string()).ok_or("Extraction échouée".into())
 }
@@ -159,6 +166,9 @@ async fn install_ventoy(device: String) -> Result<(), String> {
     if cfg!(target_os = "macos") {
         return Err("Ventoy ne peut pas être installé depuis macOS. Prépare la clé une fois sous Linux.".into());
     }
+    #[cfg(windows)]
+    return windows::install_ventoy(&device, find_ventoy().ok_or("Ventoy n'est pas encore téléchargé.")?).await;
+    #[allow(unreachable_code)]
     let drives = list_drives().await?;
     if !drives.iter().any(|d| d.path == device) {
         return Err("Ce périphérique n'est pas une clé USB détectée.".into());
@@ -189,6 +199,8 @@ async fn install_ventoy(device: String) -> Result<(), String> {
 async fn mount_drive(device: String) -> Result<String, String> {
     #[cfg(target_os = "macos")]
     return macos::mount_drive(&device).await;
+    #[cfg(windows)]
+    return windows::mount_drive(&device).await;
     #[allow(unreachable_code)]
     let d = list_drives().await?.into_iter().find(|d| d.path == device).ok_or("Clé introuvable")?;
     if let Some(m) = d.mountpoint {
@@ -219,7 +231,7 @@ async fn list_isos(mountpoint: String) -> Result<Vec<IsoFile>, String> {
 
 #[tauri::command]
 async fn delete_iso(mountpoint: String, name: String) -> Result<(), String> {
-    if name.contains('/') { return Err("Nom invalide".into()); }
+    if name.contains('/') || name.contains('\\') { return Err("Nom invalide".into()); }
     tokio::fs::remove_file(Path::new(&mountpoint).join(name)).await.map_err(|e| e.to_string())
 }
 
@@ -306,7 +318,7 @@ async fn download_to(app: &AppHandle, id: &str, url: &str, dest: &Path, sha256: 
 #[tauri::command]
 async fn download_iso(app: AppHandle, id: String, url: String, filename: String, mountpoint: String, sha256: Option<String>) -> Result<(), String> {
     CANCEL.store(false, Ordering::SeqCst);
-    if filename.contains('/') || filename.is_empty() { return Err("Nom de fichier invalide".into()); }
+    if filename.contains('/') || filename.contains('\\') || filename.is_empty() { return Err("Nom de fichier invalide".into()); }
     let dest = Path::new(&mountpoint).join(&filename);
     download_to(&app, &id, &url, &dest, sha256.as_deref().filter(|s| !s.is_empty())).await?;
     emit(&app, &id, "done", 1, 1, None);
@@ -392,6 +404,8 @@ fn cancel() {
 async fn eject(device: String) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     return macos::eject(&device).await;
+    #[cfg(windows)]
+    return windows::eject(&device).await;
     #[allow(unreachable_code)]
     if !list_drives().await?.iter().any(|d| d.path == device) {
         return Err("Clé introuvable".into());

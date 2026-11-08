@@ -27,7 +27,7 @@ function log(msg, kind = '') {
   li.className = kind; li.innerHTML = `<time>[${hh}:${mm}:${ss}]</time>${esc(msg)}`;
   $('#log').appendChild(li); $('#log').scrollTop = 1e9;
 }
-const basename = (p) => p.split('/').pop();
+const basename = (p) => p.split(/[\\/]/).pop();
 const urlName = (u) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop()) || 'image.iso'; } catch { return 'image.iso'; } };
 const allItems = () => [...window.CATALOG, ...state.customs];
 

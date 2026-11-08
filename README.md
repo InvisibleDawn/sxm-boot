@@ -4,8 +4,8 @@
 
 **Une clé, tous tes systèmes. · One drive, all your systems.**
 
-Créateur de clé USB multiboot, simple et joli, pour Fedora et macOS.
-A simple, good-looking multiboot USB creator for Fedora and macOS.
+Créateur de clé USB multiboot, simple et joli, pour Fedora, Windows et macOS.
+A simple, good-looking multiboot USB creator for Fedora, Windows and macOS.
 
 [Français](#français) · [English](#english)
 
@@ -52,6 +52,8 @@ Télécharge la dernière version dans **[Releases](../../releases)**.
 sudo dnf install ./sxm-boot-*.x86_64.rpm
 ```
 
+**Windows 10 / 11** : lance l'installateur `SXM Boot_x.x.x_x64-setup.exe`. Windows SmartScreen peut afficher « Windows a protégé votre ordinateur » car l'appli n'est pas signée : clique sur **Informations complémentaires → Exécuter quand même**. La préparation d'une clé vierge demande l'autorisation administrateur.
+
 **macOS** : ouvre le `.dmg` et glisse SXM Boot dans Applications. L'appli n'étant pas signée par Apple, fais **clic droit → Ouvrir** au premier lancement (ou `xattr -cr "/Applications/SXM Boot.app"`).
 
 > Sur macOS, la préparation d'une clé vierge (Ventoy) se fait une seule fois sous Linux. Ensuite, tout se gère depuis le Mac.
@@ -86,6 +88,8 @@ Grab the latest version from **[Releases](../../releases)**.
 sudo dnf install ./sxm-boot-*.x86_64.rpm
 ```
 
+**Windows 10 / 11**: run the `SXM Boot_x.x.x_x64-setup.exe` installer. Windows SmartScreen may say “Windows protected your PC” because the app is not signed: click **More info → Run anyway**. Preparing a blank drive asks for administrator permission.
+
 **macOS**: open the `.dmg` and drag SXM Boot to Applications. The app is not signed by Apple, so **right-click → Open** on first launch (or run `xattr -cr "/Applications/SXM Boot.app"`).
 
 > On macOS, preparing a blank drive (Ventoy) must be done once on Linux. After that, everything can be managed from the Mac.
@@ -106,8 +110,8 @@ npm install
 cd src-tauri && npx tauri build --bundles rpm
 ```
 
-Les versions `.rpm` et `.dmg` sont aussi compilées automatiquement par GitHub Actions.
-Both `.rpm` and `.dmg` are also built automatically by GitHub Actions.
+Les versions `.rpm`, `.exe` et `.dmg` sont aussi compilées automatiquement par GitHub Actions.
+The `.rpm`, `.exe` and `.dmg` builds are also built automatically by GitHub Actions.
 
 ## Licence / License
 
