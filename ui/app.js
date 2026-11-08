@@ -119,7 +119,7 @@ function renderCards() {
       <div class="top"><span class="disc" style="background:${x.color}"><img src="${x.logo}" alt=""></span>
         <div><h4>${esc(x.name)}</h4></div></div>
       <p>${esc((window.LANG === 'en' && x.desc_en) || x.desc || '')}</p>${src}
-      <div class="foot"><span class="pill">${esc(x.version || t('ISO perso'))}</span>
+      <div class="foot"><span class="pill">${esc(x.version ? t(x.version) : t('ISO perso'))}</span>
         ${x.url ? `<span class="size">≈ ${fmt(x.size)}</span>` : `<span class="size">${fmt(p && p.size)}</span>`}</div>
       ${x.url ? `<button class="alt" data-local>${t("J'ai déjà l'ISO sur mon PC…")}</button>` : ''}
     </div>`;

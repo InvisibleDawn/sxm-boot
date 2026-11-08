@@ -2,6 +2,21 @@
 // Catalogue : systèmes avec lien de téléchargement direct vérifié.
 // "sums" = fichier de sommes SHA256 publié à côté de l'ISO (vérification automatique).
 window.CATALOG = [
+  { id: 'cachyos', logo: 'img/cachyos.svg', color: '#1AA39A', name: 'CachyOS',
+    desc: 'N°1 sur DistroWatch : basée sur Arch, rapide et optimisée pour les PC récents.',
+    desc_en: '#1 on DistroWatch: Arch-based, fast and optimized for modern PCs.', version: 'Août 2026', size: 3.1e9,
+    url: 'https://cdn77.cachyos.org/ISO/desktop/260809/cachyos-desktop-linux-260809.iso',
+    sums: 'https://mirror.cachyos.org/ISO/desktop/260809/cachyos-desktop-linux-260809.iso.sha256' },
+  { id: 'mint', logo: 'img/linuxmint.svg', color: '#69A84F', name: 'Linux Mint',
+    desc: 'Simple, élégante et très facile pour débuter, avec le bureau Cinnamon.',
+    desc_en: 'Simple, elegant and beginner-friendly, with the Cinnamon desktop.', version: 'Stable 22.3', size: 2.9e9,
+    url: 'https://ftp.nl.freebsd.org/os/Linux/distr/linuxmint/iso/stable/22.3/linuxmint-22.3-cinnamon-64bit.iso',
+    sums: 'https://ftp.nl.freebsd.org/os/Linux/distr/linuxmint/iso/stable/22.3/sha256sum.txt' },
+  { id: 'mx', logo: 'img/mxlinux.svg', color: '#3B4250', name: 'MX Linux',
+    desc: 'Basée sur Debian, légère et stable, avec de nombreux outils pratiques.',
+    desc_en: 'Debian-based, light and stable, with many handy tools.', version: 'Stable 25.2 · Xfce', size: 2.9e9,
+    url: 'https://downloads.sourceforge.net/project/mx-linux/Final/Xfce/MX-25.2_Xfce_x64.iso',
+    sums: 'https://downloads.sourceforge.net/project/mx-linux/Final/Xfce/MX-25.2_Xfce_x64.iso.sha256' },
   { id: 'fedora-cinnamon', logo: 'img/fedora.svg', color: '#3C6EB4', name: 'Fedora Cinnamon',
     desc: 'Fedora avec le bureau Cinnamon : moderne, familier et stable.',
     desc_en: 'Fedora with the Cinnamon desktop: modern, familiar and stable.', version: 'Fedora 45', size: 2.6e9,

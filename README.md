@@ -30,8 +30,13 @@ Ventoy est excellent, mais il faut trouver, télécharger et vérifier chaque IS
 
 ### Systèmes proposés
 
+Le top 5 de DistroWatch (6 derniers mois), plus une sélection pour le dépannage :
+
 | Système | Version | SHA256 |
 |---|---|---|
+| CachyOS | Août 2026 | ✓ |
+| Linux Mint Cinnamon | 22.3 | ✓ |
+| MX Linux Xfce | 25.2 | ✓ |
 | Fedora Cinnamon | 45 | ✓ |
 | Ubuntu MATE | 26.10 | ✓ |
 | Lubuntu | 26.10 | ✓ |

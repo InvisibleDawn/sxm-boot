@@ -1,6 +1,7 @@
 // SXM Boot — © 2026 Laurent Honoré — GPL-3.0-or-later
 // Traductions : le français est la langue source, l'anglais est la traduction.
 window.EN = {
+  'Août 2026': 'August 2026',
   // Interface fixe
   'Accueil': 'Home',
   'Sur la clé': 'On the drive',
