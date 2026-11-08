@@ -1,49 +1,111 @@
+<div align="center">
+
 # SXM Boot
 
-Créateur de clé USB multiboot pour Fedora, avec une interface claire en 3 étapes.
-Le moteur de démarrage est Ventoy, que l'appli télécharge elle-même au premier lancement.
+**Une clé, tous tes systèmes. · One drive, all your systems.**
 
-## Ce que fait l'appli
+Créateur de clé USB multiboot, simple et joli, pour Fedora et macOS.
+A simple, good-looking multiboot USB creator for Fedora and macOS.
 
-1. **Clé USB** : détecte uniquement les clés USB (jamais les disques internes). Une clé vierge est préparée avec Ventoy après confirmation ; le mot de passe administrateur est demandé par polkit.
-2. **Systèmes & outils** : galerie par catégorie. Pour chaque système, tu choisis le fichier .iso sur ton PC ou tu colles un lien direct (avec la somme SHA256 si tu l'as). Tu vois aussi les ISO déjà présentes sur la clé et tu peux les supprimer.
-3. **Création** : copie ou téléchargement direct sur la clé avec progression, vérification SHA256, annulation et éjection.
+[Français](#français) · [English](#english)
 
-## Compiler sur Fedora
+![SXM Boot](docs/screenshot-fr.png)
 
+</div>
+
+---
+
+## Français
+
+### Pourquoi SXM Boot ?
+
+Ventoy est excellent, mais il faut trouver, télécharger et vérifier chaque ISO soi-même. SXM Boot fait tout ça pour toi dans une interface claire :
+
+- **Coche, clique, c'est prêt** : les systèmes sont téléchargés directement sur la clé.
+- **Vérification SHA256 automatique** de chaque ISO, à partir des sommes officielles.
+- **Tes ISO à toi** : ajoute n'importe quel fichier `.iso` de ton ordinateur.
+- **Rien n'est perdu** : les ISO déjà sur la clé sont conservées, tu ajoutes ou retires à volonté.
+- **Sécurité** : seules les clés USB sont proposées, jamais tes disques internes.
+- **Français et anglais**, au choix dans l'appli.
+
+### Systèmes proposés
+
+| Système | Version | SHA256 |
+|---|---|---|
+| Fedora Cinnamon | 45 | ✓ |
+| Ubuntu MATE | 26.10 | ✓ |
+| Lubuntu | 26.10 | ✓ |
+| Debian (Net Install) | 13.7 | ✓ |
+| GParted Live | 1.8 | — |
+
+### Installation
+
+Télécharge la dernière version dans **[Releases](../../releases)**.
+
+**Fedora**
 ```bash
-# Dépendances
-sudo dnf install webkit2gtk4.1-devel openssl-devel curl wget file \
-  libappindicator-gtk3-devel librsvg2-devel gcc rpm-build
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-cargo install tauri-cli --version "^2"
-
-# Lancer en mode développement
-cd sxm-boot/src-tauri
-cargo tauri dev
-
-# Créer le paquet .rpm
-cargo tauri build
-sudo dnf install ./target/release/bundle/rpm/SXM\ Boot-0.1.0-1.x86_64.rpm
+sudo dnf install ./sxm-boot-*.x86_64.rpm
 ```
 
-## Version macOS
+**macOS** : ouvre le `.dmg` et glisse SXM Boot dans Applications. L'appli n'étant pas signée par Apple, fais **clic droit → Ouvrir** au premier lancement (ou `xattr -cr "/Applications/SXM Boot.app"`).
 
-Le fichier `.dmg` est compilé automatiquement par GitHub Actions (onglet **Actions** du dépôt → dernière exécution → artefact **SXM-Boot-macOS**).
+> Sur macOS, la préparation d'une clé vierge (Ventoy) se fait une seule fois sous Linux. Ensuite, tout se gère depuis le Mac.
 
-- Sur Mac, SXM Boot détecte les clés, ajoute, télécharge et retire des ISO.
-- La **préparation d'une clé vierge (Ventoy) se fait une seule fois sous Linux** : Ventoy n'existe pas pour macOS.
-- L'appli n'est pas signée par Apple : au premier lancement, fais clic droit → **Ouvrir**, ou lance `xattr -cr "/Applications/SXM Boot.app"`.
+### Démarrer sur la clé
 
-## Personnaliser le catalogue
+Désactive Secure Boot dans le BIOS, puis appuie sur **F12**, **F11** ou **Échap** au démarrage (selon la marque) et choisis la clé.
 
-Modifie `ui/catalog.js`. Pour un téléchargement direct en un clic, ajoute `url` (et si possible `sha256`) à une entrée.
+---
 
-## Notes
+## English
 
-- Secure Boot doit être désactivé (ou Ventoy enregistré via MOK).
-- Ventoy est stocké dans `~/.local/share/sxm-boot/ventoy/`. Une installation dans `/opt/ventoy/` est aussi reconnue.
+![SXM Boot in English](docs/screenshot-en.png)
 
-## Licence
+### Why SXM Boot?
 
-© 2026 Laurent Honoré. Distribué sous licence GNU GPL v3 ou ultérieure (voir `LICENSE`).
+Ventoy is great, but you still have to find, download and verify every ISO yourself. SXM Boot does all of that for you in a clean interface:
+
+- **Tick, click, done**: systems are downloaded straight onto the drive.
+- **Automatic SHA256 verification** of every ISO against the official checksums.
+- **Bring your own ISOs**: add any `.iso` file from your computer.
+- **Nothing gets lost**: ISOs already on the drive are kept; add or remove at will.
+- **Safe**: only USB drives are listed, never your internal disks.
+- **English and French**, switchable in the app.
+
+### Installation
+
+Grab the latest version from **[Releases](../../releases)**.
+
+**Fedora**
+```bash
+sudo dnf install ./sxm-boot-*.x86_64.rpm
+```
+
+**macOS**: open the `.dmg` and drag SXM Boot to Applications. The app is not signed by Apple, so **right-click → Open** on first launch (or run `xattr -cr "/Applications/SXM Boot.app"`).
+
+> On macOS, preparing a blank drive (Ventoy) must be done once on Linux. After that, everything can be managed from the Mac.
+
+### Booting from the drive
+
+Disable Secure Boot in the BIOS, then press **F12**, **F11** or **Esc** at startup (depending on the brand) and pick the USB drive.
+
+---
+
+## Compiler / Build
+
+```bash
+# Fedora
+sudo dnf install webkit2gtk4.1-devel openssl-devel librsvg2-devel gcc rpm-build nodejs
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+npm install
+cd src-tauri && npx tauri build --bundles rpm
+```
+
+Les versions `.rpm` et `.dmg` sont aussi compilées automatiquement par GitHub Actions.
+Both `.rpm` and `.dmg` are also built automatically by GitHub Actions.
+
+## Licence / License
+
+© 2026 Laurent Honoré — [GNU GPL v3 ou ultérieure / or later](LICENSE).
+
+Moteur de démarrage / Boot engine: [Ventoy](https://www.ventoy.net) (GPLv3). Logos: [Simple Icons](https://simpleicons.org) (CC0). Les noms et logos des distributions sont des marques de leurs propriétaires respectifs ; SXM Boot n'est affilié à aucune d'elles. / Distribution names and logos are trademarks of their respective owners; SXM Boot is not affiliated with any of them.
