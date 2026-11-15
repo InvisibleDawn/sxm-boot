@@ -146,7 +146,7 @@ function togglePick(id) {
   if (state.running) return;
   const x = allItems().find((i) => i.id === id);
   if (state.picks[id]) { delete state.picks[id]; if (!x.url) state.customs = state.customs.filter((c) => c.id !== id); }
-  else if (x.url) state.picks[id] = { kind: 'url', url: x.url, sums: x.sums, filename: urlName(x.url), size: x.size };
+  else if (x.url) state.picks[id] = { kind: 'url', url: x.url, sums: x.sums, sha256: x.sha256, filename: urlName(x.url), size: x.size };
   renderCards();
 }
 
@@ -246,13 +246,19 @@ $('#go').onclick = async () => {
         j.info = t('Copiée');
       } else {
         let sha = null;
-        if (verify && j.p.sums) {
+        const noSum = verify && !j.p.sha256 && !j.p.sums;
+        if (noSum) log(t('{n} : aucune somme SHA256 officielle, ISO non vérifiée.', { n: j.name }), 'e');
+        if (verify && j.p.sha256) {
+          sha = j.p.sha256;
+        } else if (verify && j.p.sums) {
           j.info = t('Récupération de la somme SHA256…'); renderJobs();
-          try { sha = await invoke('fetch_sha', { sumsUrl: j.p.sums, filename: j.p.filename }); } catch {}
+          // Ne jamais poursuivre silencieusement si la vérification demandée échoue.
+          sha = await invoke('fetch_sha', { sumsUrl: j.p.sums, filename: j.p.filename });
+          if (!sha) throw t('Somme SHA256 introuvable : téléchargement interrompu.');
         }
         log(t('Téléchargement de {n}…', { n: j.name }));
         await invoke('download_iso', { id: j.id, url: j.p.url, filename: j.p.filename, mountpoint: state.mount, sha256: sha || null });
-        j.info = t(sha ? 'Ajoutée · SHA256 vérifié' : 'Ajoutée');
+        j.info = t(sha ? 'Ajoutée · SHA256 vérifié' : noSum ? 'Ajoutée · non vérifiée' : 'Ajoutée');
       }
       j.status = 'ok'; log(t('{n} ajoutée à la clé.', { n: j.name }), 's');
     } catch (e) { j.status = 'err'; j.info = String(e); errors++; log(`${j.name} : ${e}`, 'e'); }

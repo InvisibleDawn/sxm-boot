@@ -4,8 +4,8 @@
 
 **Une clé, tous tes systèmes. · One drive, all your systems.**
 
-Créateur de clé USB multiboot, simple et joli, pour Fedora, Windows et macOS.
-A simple, good-looking multiboot USB creator for Fedora, Windows and macOS.
+Créateur de clé USB multiboot, simple et joli, pour Linux, Windows et macOS.
+A simple, good-looking multiboot USB creator for Linux, Windows and macOS.
 
 [Français](#français) · [English](#english)
 
@@ -22,7 +22,7 @@ A simple, good-looking multiboot USB creator for Fedora, Windows and macOS.
 Ventoy est excellent, mais il faut trouver, télécharger et vérifier chaque ISO soi-même. SXM Boot fait tout ça pour toi dans une interface claire :
 
 - **Coche, clique, c'est prêt** : les systèmes sont téléchargés directement sur la clé.
-- **Vérification SHA256 automatique** de chaque ISO, à partir des sommes officielles.
+- **Vérification SHA256** des ISO disposant d’une somme officielle ; les téléchargements contrôlés sont supprimés si leur empreinte ne correspond pas.
 - **Tes ISO à toi** : ajoute n'importe quel fichier `.iso` de ton ordinateur.
 - **Rien n'est perdu** : les ISO déjà sur la clé sont conservées, tu ajoutes ou retires à volonté.
 - **Sécurité** : seules les clés USB sont proposées, jamais tes disques internes.
@@ -32,6 +32,7 @@ Ventoy est excellent, mais il faut trouver, télécharger et vérifier chaque IS
 
 | Système | Version | SHA256 |
 |---|---|---|
+| CachyOS Desktop (n°1 DistroWatch) | 260809 | ✓ |
 | Debian (Net Install) | 13.7 | ✓ |
 | Fedora MATE | 45 | ✓ |
 | Ubuntu MATE | 26.10 | ✓ |
@@ -113,3 +114,4 @@ The `.rpm`, `.exe` and `.dmg` builds are also built automatically by GitHub Acti
 © 2026 Laurent Honoré — [GNU GPL v3 ou ultérieure / or later](LICENSE).
 
 Moteur de démarrage / Boot engine: [Ventoy](https://www.ventoy.net) (GPLv3). Logos: [Simple Icons](https://simpleicons.org) (CC0). Les noms et logos des distributions sont des marques de leurs propriétaires respectifs ; SXM Boot n'est affilié à aucune d'elles. / Distribution names and logos are trademarks of their respective owners; SXM Boot is not affiliated with any of them.
+

@@ -2,6 +2,11 @@
 // Catalogue : systèmes avec lien de téléchargement direct vérifié.
 // "sums" = fichier de sommes SHA256 publié à côté de l'ISO (vérification automatique).
 window.CATALOG = [
+  { id: 'cachyos', logo: 'img/cachyos.svg', color: '#16A085', name: 'CachyOS',
+    desc: 'N°1 sur DistroWatch : basée sur Arch Linux, optimisée pour les performances, avec KDE Plasma.',
+    desc_en: '#1 on DistroWatch: Arch-based, performance-optimized, with KDE Plasma.', version: 'Desktop 260809', size: 3.2e9,
+    url: 'https://iso.cachyos.org/desktop/260809/cachyos-desktop-linux-260809.iso',
+    sha256: '959f6577f45e25ee9fd8c220fd221b08e4ea79412c7315c0f922dd6d86d5e33c' },
   { id: 'debian', logo: 'img/debian.svg', color: '#C7084F', name: 'Debian',
     desc: 'Debian Stable en Net Install : installation via Internet.',
     desc_en: 'Debian Stable Net Install: installs over the Internet.', version: 'Stable 13.7 · Netinst', size: 0.8e9,

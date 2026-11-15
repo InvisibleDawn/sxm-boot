@@ -60,6 +60,50 @@ fn first_mount(v: &Value) -> Option<String> {
     v.get("mountpoint").and_then(|m| m.as_str()).map(String::from)
 }
 
+/// Vérifie qu'un chemin correspond réellement au volume Ventoy d'une clé USB détectée.
+/// Les commandes Tauri ne doivent jamais accepter un point de montage fourni librement par le webview.
+async fn validated_mountpoint(value: &str) -> Result<PathBuf, String> {
+    let requested = tokio::fs::canonicalize(value).await
+        .map_err(|_| "Point de montage inaccessible.".to_string())?;
+    let drives = list_drives().await?;
+    for drive in drives.into_iter().filter(|d| d.ventoy) {
+        if let Some(mount) = drive.mountpoint {
+            if let Ok(actual) = tokio::fs::canonicalize(mount).await {
+                if actual == requested {
+                    return Ok(actual);
+                }
+            }
+        }
+    }
+    Err("Le chemin indiqué ne correspond pas à la partition Ventoy d'une clé USB détectée.".into())
+}
+
+fn valid_iso_name(name: &str) -> bool {
+    !name.is_empty()
+        && !name.contains('/')
+        && !name.contains('\\')
+        && Path::new(name).file_name().and_then(|n| n.to_str()) == Some(name)
+        && (name.to_ascii_lowercase().ends_with(".iso") || name.to_ascii_lowercase().ends_with(".img"))
+}
+
+fn trusted_download_url(value: &str) -> Result<(), String> {
+    let url = reqwest::Url::parse(value).map_err(|_| "URL de téléchargement invalide.".to_string())?;
+    if url.scheme() != "https" {
+        return Err("Les téléchargements doivent utiliser HTTPS.".into());
+    }
+    let host = url.host_str().unwrap_or_default().to_ascii_lowercase();
+    let allowed = [
+        "debian.grena.ge", "download.fedoraproject.org", "dl.fedoraproject.org",
+        "cdimage.ubuntu.com", "ftp.nl.freebsd.org", "downloads.sourceforge.net",
+        "iso.cachyos.org", "cdn77.cachyos.org", "mirror.cachyos.org",
+        "us.cachyos.org",
+    ];
+    if !allowed.iter().any(|domain| host == *domain || host.ends_with(&format!(".{domain}"))) {
+        return Err("Domaine de téléchargement non autorisé.".into());
+    }
+    Ok(())
+}
+
 pub(crate) async fn run(cmd: &str, args: &[&str]) -> Result<String, String> {
     let mut c = Command::new(cmd);
     c.args(args);
@@ -175,12 +219,20 @@ async fn install_ventoy(device: String) -> Result<(), String> {
     }
     let script = find_ventoy().ok_or("Ventoy n'est pas encore téléchargé.")?;
     let dir = script.parent().unwrap().display().to_string();
-    // Démonter les partitions avant d'écrire
-    let _ = Command::new("sh").arg("-c")
-        .arg(format!("for p in {device}?*; do udisksctl unmount -b \"$p\" --no-user-interaction; done"))
-        .output().await;
+    // Démonter les partitions détectées par lsblk : aucune commande shell interpolée.
+    let block = run("lsblk", &["-nrpo", "PATH,TYPE", &device]).await?;
+    for line in block.lines() {
+        let mut fields = line.split_whitespace();
+        let part = fields.next().unwrap_or_default();
+        let kind = fields.next().unwrap_or_default();
+        if kind == "part" && !part.is_empty() {
+            let _ = run("udisksctl", &["unmount", "-b", part, "--no-user-interaction"]).await;
+        }
+    }
+    // pkexec revient toujours dans le dossier de root : on fait le `cd` dans la commande,
+    // avec le dossier et la clé passés en arguments ($1, $2), jamais insérés dans le texte.
     let mut child = Command::new("pkexec")
-        .args(["sh", "-c", &format!("cd '{dir}' && ./Ventoy2Disk.sh -I '{device}'")])
+        .args(["/bin/sh", "-c", "cd \"$1\" && exec ./Ventoy2Disk.sh -I \"$2\"", "sh", &dir, &device])
         .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped())
         .spawn().map_err(|e| e.to_string())?;
     if let Some(mut stdin) = child.stdin.take() {
@@ -215,6 +267,7 @@ async fn mount_drive(device: String) -> Result<String, String> {
 
 #[tauri::command]
 async fn list_isos(mountpoint: String) -> Result<Vec<IsoFile>, String> {
+    let mountpoint = validated_mountpoint(&mountpoint).await?;
     let mut v = Vec::new();
     let mut rd = tokio::fs::read_dir(&mountpoint).await.map_err(|e| e.to_string())?;
     while let Ok(Some(e)) = rd.next_entry().await {
@@ -231,8 +284,9 @@ async fn list_isos(mountpoint: String) -> Result<Vec<IsoFile>, String> {
 
 #[tauri::command]
 async fn delete_iso(mountpoint: String, name: String) -> Result<(), String> {
-    if name.contains('/') || name.contains('\\') { return Err("Nom invalide".into()); }
-    tokio::fs::remove_file(Path::new(&mountpoint).join(name)).await.map_err(|e| e.to_string())
+    if !valid_iso_name(&name) { return Err("Nom de fichier ISO invalide".into()); }
+    let mountpoint = validated_mountpoint(&mountpoint).await?;
+    tokio::fs::remove_file(mountpoint.join(name)).await.map_err(|e| e.to_string())
 }
 
 fn emit(app: &AppHandle, id: &str, phase: &str, done: u64, total: u64, msg: Option<String>) {
@@ -243,30 +297,38 @@ fn emit(app: &AppHandle, id: &str, phase: &str, done: u64, total: u64, msg: Opti
 #[tauri::command]
 async fn copy_iso(app: AppHandle, id: String, src: String, mountpoint: String) -> Result<(), String> {
     CANCEL.store(false, Ordering::SeqCst);
-    let name = Path::new(&src).file_name().ok_or("Fichier invalide")?.to_owned();
-    let dest = Path::new(&mountpoint).join(&name);
-    let part = dest.with_extension("part");
-    let total = tokio::fs::metadata(&src).await.map_err(|e| e.to_string())?.len();
-    let mut input = tokio::fs::File::open(&src).await.map_err(|e| e.to_string())?;
-    let mut out = tokio::fs::File::create(&part).await.map_err(|e| e.to_string())?;
-    let mut buf = vec![0u8; CHUNK];
-    let mut done = 0u64;
-    loop {
-        if CANCEL.load(Ordering::SeqCst) {
-            drop(out);
-            let _ = tokio::fs::remove_file(&part).await;
-            return Err("Annulé".into());
-        }
-        let n = input.read(&mut buf).await.map_err(|e| e.to_string())?;
-        if n == 0 { break; }
-        out.write_all(&buf[..n]).await.map_err(|e| e.to_string())?;
-        done += n as u64;
-        emit(&app, &id, "copy", done, total, None);
+    let source = Path::new(&src);
+    let name = source.file_name().and_then(|n| n.to_str()).ok_or("Fichier invalide")?.to_owned();
+    if !valid_iso_name(&name) { return Err("Seuls les fichiers .iso et .img sont acceptés.".into()); }
+    let mountpoint = validated_mountpoint(&mountpoint).await?;
+    let dest = mountpoint.join(&name);
+    if tokio::fs::try_exists(&dest).await.unwrap_or(false) {
+        return Err("Ce fichier existe déjà sur la clé. Retire-le avant de le remplacer.".into());
     }
-    out.sync_all().await.map_err(|e| e.to_string())?;
-    tokio::fs::rename(&part, &dest).await.map_err(|e| e.to_string())?;
-    emit(&app, &id, "done", total, total, None);
-    Ok(())
+    let part = dest.with_extension("part");
+    let result: Result<(), String> = async {
+        let total = tokio::fs::metadata(&src).await.map_err(|e| e.to_string())?.len();
+        let mut input = tokio::fs::File::open(&src).await.map_err(|e| e.to_string())?;
+        let mut out = tokio::fs::File::create(&part).await.map_err(|e| e.to_string())?;
+        let mut buf = vec![0u8; CHUNK];
+        let mut done = 0u64;
+        loop {
+            if CANCEL.load(Ordering::SeqCst) { return Err("Annulé".into()); }
+            let n = input.read(&mut buf).await.map_err(|e| e.to_string())?;
+            if n == 0 { break; }
+            out.write_all(&buf[..n]).await.map_err(|e| e.to_string())?;
+            done += n as u64;
+            emit(&app, &id, "copy", done, total, None);
+        }
+        out.sync_all().await.map_err(|e| e.to_string())?;
+        drop(out);
+        if done != total { return Err("Copie incomplète : taille source et destination différentes.".into()); }
+        tokio::fs::rename(&part, &dest).await.map_err(|e| e.to_string())?;
+        emit(&app, &id, "done", total, total, None);
+        Ok(())
+    }.await;
+    if result.is_err() { let _ = tokio::fs::remove_file(&part).await; }
+    result
 }
 
 fn http() -> Result<reqwest::Client, String> {
@@ -274,52 +336,68 @@ fn http() -> Result<reqwest::Client, String> {
 }
 
 async fn download_to(app: &AppHandle, id: &str, url: &str, dest: &Path, sha256: Option<&str>) -> Result<(), String> {
-    let resp = http()?.get(url).send().await.map_err(|e| e.to_string())?;
-    if !resp.status().is_success() {
-        return Err(format!("Téléchargement refusé ({})", resp.status()));
-    }
-    let total = resp.content_length().unwrap_or(0);
-    let part = dest.with_extension("part");
-    let mut out = tokio::fs::File::create(&part).await.map_err(|e| e.to_string())?;
-    let mut hasher = Sha256::new();
-    let mut done = 0u64;
-    let mut stream = resp.bytes_stream();
-    let mut last = 0u64;
-    while let Some(chunk) = stream.next().await {
-        if CANCEL.load(Ordering::SeqCst) {
-            drop(out);
-            let _ = tokio::fs::remove_file(&part).await;
-            return Err("Annulé".into());
-        }
-        let chunk = chunk.map_err(|e| e.to_string())?;
-        out.write_all(&chunk).await.map_err(|e| e.to_string())?;
-        if sha256.is_some() { hasher.update(&chunk); }
-        done += chunk.len() as u64;
-        if done - last > 1_000_000 || done == total {
-            last = done;
-            emit(app, id, "download", done, total, None);
-        }
-    }
-    out.sync_all().await.map_err(|e| e.to_string())?;
-    drop(out);
     if let Some(expected) = sha256 {
-        emit(app, id, "verify", done, done, None);
-        let got = hex::encode(hasher.finalize());
-        if !got.eq_ignore_ascii_case(expected.trim()) {
-            let _ = tokio::fs::remove_file(&part).await;
-            return Err("Somme SHA256 incorrecte : fichier supprimé.".into());
+        if expected.len() != 64 || !expected.chars().all(|c| c.is_ascii_hexdigit()) {
+            return Err("Format de somme SHA256 invalide.".into());
         }
     }
-    tokio::fs::rename(&part, dest).await.map_err(|e| e.to_string())?;
-    Ok(())
+    let part = dest.with_extension("part");
+    let result: Result<(), String> = async {
+        let resp = http()?.get(url).send().await.map_err(|e| e.to_string())?;
+        if !resp.status().is_success() {
+            return Err(format!("Téléchargement refusé ({})", resp.status()));
+        }
+        let total = resp.content_length().unwrap_or(0);
+        let mut out = tokio::fs::File::create(&part).await.map_err(|e| e.to_string())?;
+        let mut hasher = Sha256::new();
+        let mut done = 0u64;
+        let mut stream = resp.bytes_stream();
+        let mut last = 0u64;
+        while let Some(chunk) = stream.next().await {
+            if CANCEL.load(Ordering::SeqCst) {
+                return Err("Annulé".into());
+            }
+            let chunk = chunk.map_err(|e| e.to_string())?;
+            out.write_all(&chunk).await.map_err(|e| e.to_string())?;
+            if sha256.is_some() { hasher.update(&chunk); }
+            done += chunk.len() as u64;
+            if done - last > 1_000_000 || (total > 0 && done == total) {
+                last = done;
+                emit(app, id, "download", done, total, None);
+            }
+        }
+        out.sync_all().await.map_err(|e| e.to_string())?;
+        drop(out);
+        if total > 0 && done != total {
+            return Err(format!("Téléchargement incomplet : {done} octets reçus sur {total}."));
+        }
+        if let Some(expected) = sha256 {
+            emit(app, id, "verify", done, done, None);
+            let got = hex::encode(hasher.finalize());
+            if !got.eq_ignore_ascii_case(expected.trim()) {
+                return Err("Somme SHA256 incorrecte : fichier temporaire supprimé.".into());
+            }
+        }
+        tokio::fs::rename(&part, dest).await.map_err(|e| e.to_string())?;
+        Ok(())
+    }.await;
+    if result.is_err() {
+        let _ = tokio::fs::remove_file(&part).await;
+    }
+    result
 }
 
 /// Télécharge une ISO directement sur la clé.
 #[tauri::command]
 async fn download_iso(app: AppHandle, id: String, url: String, filename: String, mountpoint: String, sha256: Option<String>) -> Result<(), String> {
     CANCEL.store(false, Ordering::SeqCst);
-    if filename.contains('/') || filename.contains('\\') || filename.is_empty() { return Err("Nom de fichier invalide".into()); }
-    let dest = Path::new(&mountpoint).join(&filename);
+    if !valid_iso_name(&filename) { return Err("Nom de fichier ISO invalide".into()); }
+    trusted_download_url(&url)?;
+    let mountpoint = validated_mountpoint(&mountpoint).await?;
+    let dest = mountpoint.join(&filename);
+    if tokio::fs::try_exists(&dest).await.unwrap_or(false) {
+        return Err("Cette ISO est déjà présente sur la clé. Retire-la avant de la remplacer.".into());
+    }
     download_to(&app, &id, &url, &dest, sha256.as_deref().filter(|s| !s.is_empty())).await?;
     emit(&app, &id, "done", 1, 1, None);
     Ok(())
@@ -346,6 +424,7 @@ fn ver_key(v: &str) -> Vec<u32> {
 /// Trouve la dernière version publiée dans un dossier de miroir (ex. Fedora 45, Ubuntu MATE 26.10).
 #[tauri::command]
 async fn resolve_latest(base: String, subpath: String, prefix: String, suffix: String) -> Result<Latest, String> {
+    trusted_download_url(&base)?;
     let client = http()?;
     let index = client.get(&base).send().await.map_err(|e| e.to_string())?.text().await.map_err(|e| e.to_string())?;
     let mut versions: Vec<String> = hrefs(&index).into_iter()
@@ -374,15 +453,31 @@ async fn resolve_latest(base: String, subpath: String, prefix: String, suffix: S
 
 /// Récupère la somme SHA256 d'un fichier dans un fichier de sommes publié (formats Fedora, Debian, Ubuntu, Mint).
 #[tauri::command]
-async fn fetch_sha(sums_url: String, filename: String) -> Result<Option<String>, String> {
-    let text = http()?.get(&sums_url).send().await.map_err(|e| e.to_string())?
-        .text().await.map_err(|e| e.to_string())?;
-    for line in text.lines().filter(|l| l.contains(&filename)) {
-        let hash = line.split(|c: char| !c.is_ascii_hexdigit())
-            .find(|t| t.len() == 64);
-        if let Some(h) = hash { return Ok(Some(h.to_lowercase())); }
+async fn fetch_sha(sums_url: String, filename: String) -> Result<String, String> {
+    trusted_download_url(&sums_url)?;
+    if !valid_iso_name(&filename) { return Err("Nom de fichier ISO invalide".into()); }
+    let response = http()?.get(&sums_url).send().await.map_err(|e| e.to_string())?;
+    if !response.status().is_success() {
+        return Err(format!("Fichier SHA256 indisponible ({})", response.status()));
     }
-    Ok(None)
+    let body = response.text().await.map_err(|e| e.to_string())?;
+    // Formats GNU sha256sum (hash + nom), ou fichier CachyOS contenant uniquement le hash.
+    let lines: Vec<&str> = body.lines().collect();
+    for line in &lines {
+        let trimmed = line.trim();
+        let matches_file = trimmed.ends_with(&filename)
+            || trimmed.split_whitespace().last() == Some(filename.as_str());
+        if matches_file {
+            if let Some(hash) = trimmed.split_whitespace().find(|part| part.len() == 64 && part.chars().all(|c| c.is_ascii_hexdigit())) {
+                return Ok(hash.to_ascii_lowercase());
+            }
+        }
+    }
+    let hashes: Vec<&str> = lines.iter().map(|line| line.trim())
+        .filter(|line| line.len() == 64 && line.chars().all(|c| c.is_ascii_hexdigit()))
+        .collect();
+    if hashes.len() == 1 { return Ok(hashes[0].to_ascii_lowercase()); }
+    Err(format!("Aucune somme SHA256 exploitable trouvée pour {filename}."))
 }
 
 #[tauri::command]
@@ -410,9 +505,16 @@ async fn eject(device: String) -> Result<(), String> {
     if !list_drives().await?.iter().any(|d| d.path == device) {
         return Err("Clé introuvable".into());
     }
-    let _ =Command::new("sh").arg("-c")
-        .arg(format!("sync; for p in {device}?*; do udisksctl unmount -b \"$p\" --no-user-interaction; done"))
-        .output().await;
+    let _ = run("sync", &[]).await;
+    let block = run("lsblk", &["-nrpo", "PATH,TYPE", &device]).await?;
+    for line in block.lines() {
+        let mut fields = line.split_whitespace();
+        let part = fields.next().unwrap_or_default();
+        let kind = fields.next().unwrap_or_default();
+        if kind == "part" && !part.is_empty() {
+            let _ = run("udisksctl", &["unmount", "-b", part, "--no-user-interaction"]).await;
+        }
+    }
     run("udisksctl", &["power-off", "-b", &device, "--no-user-interaction"]).await.map(|_| ())
 }
 
