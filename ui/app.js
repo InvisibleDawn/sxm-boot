@@ -286,11 +286,13 @@ $('#eject').onclick = async () => {
 function setLang(l) {
   window.LANG = l; try { localStorage.setItem('lang', l); } catch {}
   applyStaticLang(); renderDrive(); renderCards(); renderJobs(); refreshOnKey(); updateGo();
+  window.dispatchEvent(new Event('langchange'));
 }
 document.querySelectorAll('.lang-btn').forEach((b) => (b.onclick = () => setLang(b.dataset.lang)));
 applyStaticLang();
 
 /* ---------- démarrage ---------- */
+if (T.app && T.app.getVersion) T.app.getVersion().then((v) => document.querySelectorAll('.app-version').forEach((el) => (el.textContent = el.closest('h2') ? v : 'v' + v))).catch(() => {});
 log(t('Application démarrée.'));
 invoke('platform').then((os) => { state.os = os; renderDrive(); if (os === 'macos') log(t("Version macOS : la préparation d'une clé vierge se fait sous Linux.")); }).catch(() => {});
 renderCards(); renderJobs();

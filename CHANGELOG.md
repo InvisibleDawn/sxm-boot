@@ -1,5 +1,19 @@
 # Journal des modifications
 
+## 0.3.0 — 16 novembre 2026
+
+### Ajouts
+- Mises à jour automatiques : SXM Boot vérifie au démarrage (puis toutes les 6 heures) si une nouvelle version est publiée.
+- Petite fenêtre de mise à jour, extensible pour voir la liste des nouveautés, corrections et améliorations de sécurité.
+- Installation en un clic : Windows s'installe et redémarre seul, Fedora installe le paquet via dnf (mot de passe demandé), macOS ouvre le .dmg.
+- Bouton « Rechercher des mises à jour » dans la page À propos.
+
+### Sécurité
+- Les mises à jour ne sont acceptées que depuis le dépôt officiel GitHub, et chaque installateur est vérifié avec sa somme SHA256 publiée par GitHub.
+
+### Corrections
+- Le numéro de version affiché vient maintenant directement de l'application.
+
 ## 0.2.0 — 15 novembre 2026
 
 ### Ajouts

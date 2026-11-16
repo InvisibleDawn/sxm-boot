@@ -1,6 +1,31 @@
 // SXM Boot — © 2026 Laurent Honoré — GPL-3.0-or-later
 // Traductions : le français est la langue source, l'anglais est la traduction.
 window.EN = {
+  // Mises à jour
+  'Rechercher des mises à jour': 'Check for updates',
+  'Voir les nouveautés': "See what's new",
+  'Masquer les nouveautés': "Hide what's new",
+  'Nouveautés': "What's new",
+  'Plus tard': 'Later',
+  'Mettre à jour': 'Update',
+  'Fermer': 'Close',
+  'Redémarrer SXM Boot': 'Restart SXM Boot',
+  'Créateur de clé USB multiboot pour Linux, Windows et macOS.': 'Multiboot USB drive creator for Linux, Windows and macOS.',
+  'SXM Boot {v} est disponible': 'SXM Boot {v} is available',
+  'Tu as la version {v}.': 'You have version {v}.',
+  '{n} nouveauté(s)': '{n} new feature(s)',
+  '{n} correction(s)': '{n} fix(es)',
+  '{n} amélioration(s) de sécurité': '{n} security improvement(s)',
+  'Aucun détail fourni pour cette version.': 'No details provided for this version.',
+  'Mise à jour disponible : version {v}.': 'Update available: version {v}.',
+  'Tu as déjà la dernière version.': 'You already have the latest version.',
+  'Impossible de vérifier les mises à jour : {e}': 'Cannot check for updates: {e}',
+  'Téléchargement de la mise à jour… {p} %': 'Downloading update… {p}%',
+  'Attends la fin de la création de la clé.': 'Wait until the drive is finished.',
+  "Mise à jour installée. Redémarre SXM Boot pour l'utiliser.": 'Update installed. Restart SXM Boot to use it.',
+  "Le fichier .dmg est ouvert : glisse SXM Boot dans Applications pour remplacer l'ancienne version.": 'The .dmg is open: drag SXM Boot to Applications to replace the old version.',
+  'Installation en cours… SXM Boot va redémarrer.': 'Installing… SXM Boot will restart.',
+  'Échec de la mise à jour : {e}': 'Update failed: {e}',
   'Août 2026': 'August 2026',
   // Interface fixe
   'Accueil': 'Home',

@@ -20,7 +20,7 @@
       <div class="logo" aria-hidden="true">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="2" width="9" height="6" rx="1"/><path d="M10 4.5h0M14 4.5h0"/><path d="M5.5 8h13v11.5a2.5 2.5 0 0 1-2.5 2.5H8a2.5 2.5 0 0 1-2.5-2.5z"/></svg>
       </div>
-      <div><strong>SXM Boot</strong><small>v0.2.0</small></div>
+      <div><strong>SXM Boot</strong><small class="app-version">v0.3.0</small></div>
     </div>
     <nav class="nav">
       <button class="nav-item on" data-view="home">
@@ -145,8 +145,9 @@
     <section id="view-about" class="view" hidden>
       <div class="page-head"><h1>À propos</h1></div>
       <div class="box about">
-        <h2>SXM Boot 0.2.0</h2>
-        <p>Créateur de clé USB multiboot pour Fedora.</p>
+        <h2>SXM Boot <span class="app-version">0.3.0</span></h2>
+        <p>Créateur de clé USB multiboot pour Linux, Windows et macOS.</p>
+        <p><button class="ghost" id="about-update">Rechercher des mises à jour</button></p>
         <p><strong>© 2026 Laurent Honoré</strong><br>Logiciel libre distribué sous licence GNU GPL v3 ou ultérieure, sans aucune garantie.</p>
         <p class="muted">Moteur de démarrage : Ventoy (GPLv3), téléchargé depuis son dépôt officiel.<br>Interface : Tauri (MIT / Apache-2.0). Logos : Simple Icons (CC0).<br>Les noms et logos des distributions sont des marques de leurs propriétaires respectifs ; SXM Boot n'est affilié à aucune d'elles.</p>
       </div>
@@ -155,8 +156,29 @@
 </div>
 
 <div id="toast" role="status" hidden></div>
+
+<aside id="upd" class="upd" role="dialog" aria-labelledby="upd-title" hidden>
+  <div class="upd-head">
+    <span class="upd-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></span>
+    <div class="upd-text"><strong id="upd-title"></strong><small id="upd-sub"></small></div>
+    <button class="upd-x" id="upd-close" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <button class="upd-toggle" id="upd-toggle" aria-expanded="false" aria-controls="upd-list">
+    <span id="upd-toggle-label">Voir les nouveautés</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <div class="upd-list" id="upd-list"></div>
+  <div class="bar upd-bar" id="upd-bar" hidden><div class="bar-add" id="upd-fill"></div></div>
+  <p class="upd-status" id="upd-status" role="status" hidden></p>
+  <div class="upd-actions" id="upd-actions">
+    <button class="ghost" id="upd-later">Plus tard</button>
+    <button class="primary" id="upd-go">Mettre à jour</button>
+  </div>
+  <button class="primary upd-restart" id="upd-restart" hidden>Redémarrer SXM Boot</button>
+</aside>
 <script src="i18n.js"></script>
 <script src="catalog.js"></script>
 <script src="app.js"></script>
+<script src="update.js"></script>
 </body>
 </html>

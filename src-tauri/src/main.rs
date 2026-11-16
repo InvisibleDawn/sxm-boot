@@ -18,6 +18,7 @@ use tokio::process::Command;
 mod macos;
 #[cfg(windows)]
 mod windows;
+mod updater;
 
 static CANCEL: AtomicBool = AtomicBool::new(false);
 const CHUNK: usize = 4 * 1024 * 1024;
@@ -331,11 +332,11 @@ async fn copy_iso(app: AppHandle, id: String, src: String, mountpoint: String) -
     result
 }
 
-fn http() -> Result<reqwest::Client, String> {
+pub(crate) fn http() -> Result<reqwest::Client, String> {
     reqwest::Client::builder().user_agent("SXM-Boot/0.1").build().map_err(|e| e.to_string())
 }
 
-async fn download_to(app: &AppHandle, id: &str, url: &str, dest: &Path, sha256: Option<&str>) -> Result<(), String> {
+pub(crate) async fn download_to(app: &AppHandle, id: &str, url: &str, dest: &Path, sha256: Option<&str>) -> Result<(), String> {
     if let Some(expected) = sha256 {
         if expected.len() != 64 || !expected.chars().all(|c| c.is_ascii_hexdigit()) {
             return Err("Format de somme SHA256 invalide.".into());
@@ -524,7 +525,8 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             list_drives, ventoy_status, fetch_ventoy, install_ventoy, mount_drive,
-            list_isos, delete_iso, copy_iso, download_iso, fetch_sha, resolve_latest, file_size, platform, cancel, eject
+            list_isos, delete_iso, copy_iso, download_iso, fetch_sha, resolve_latest, file_size, platform, cancel, eject,
+            updater::check_update, updater::install_update, updater::restart_app
         ])
         .run(tauri::generate_context!())
         .expect("erreur au lancement de SXM Boot");

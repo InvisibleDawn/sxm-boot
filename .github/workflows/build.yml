@@ -81,14 +81,23 @@ jobs:
           path: dist
           merge-multiple: true
       - run: ls -la dist
+      - name: Notes de version depuis CHANGELOG.md
+        run: |
+          v="${{ steps.v.outputs.version }}"
+          awk -v v="$v" '$0 ~ "^## "v" " {f=1; next} /^## / {f=0} f' CHANGELOG.md > notes.md
+          {
+            echo
+            echo "---"
+            echo "**Windows 10 / 11** : \`SXM.Boot_${v}_x64-setup.exe\`"
+            echo "**macOS** : \`SXM.Boot_${v}_universal.dmg\`"
+            echo "**Fedora** : \`SXM.Boot-${v}-1.x86_64.rpm\`"
+          } >> notes.md
+          cat notes.md
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.v.outputs.version }}
           name: SXM Boot ${{ steps.v.outputs.version }}
           target_commitish: ${{ github.sha }}
           make_latest: true
-          body: |
-            **Windows 10 / 11** : `SXM.Boot_${{ steps.v.outputs.version }}_x64-setup.exe`
-            **macOS** : `SXM.Boot_${{ steps.v.outputs.version }}_universal.dmg`
-            **Fedora** : `SXM.Boot-${{ steps.v.outputs.version }}-1.x86_64.rpm`
+          body_path: notes.md
           files: dist/*

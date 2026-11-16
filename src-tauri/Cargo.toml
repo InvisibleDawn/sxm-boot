@@ -1,6 +1,6 @@
 [package]
 name = "sxm-boot"
-version = "0.2.0"
+version = "0.3.0"
 description = "Créateur de clé USB multiboot multiplateforme"
 authors = ["Laurent Honoré"]
 edition = "2021"
